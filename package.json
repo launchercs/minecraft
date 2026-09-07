@@ -11,6 +11,6 @@
   },
   "dependencies": {
     "express": "^5.1.0",
-    "mc-server-ping": "^1.2.0"
+    "mc-server-ping": "^1.1.2"
   }
 }
