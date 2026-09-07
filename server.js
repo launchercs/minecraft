@@ -7,7 +7,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-
 const PORT = Number(process.env.PORT) || 3000;
 
 app.disable("x-powered-by");
@@ -15,20 +14,17 @@ app.disable("x-powered-by");
 app.use(express.json());
 
 app.use(
-    express.static(
-        path.join(__dirname, "public"),
-        {
-            extensions: ["html"],
-            maxAge: "1h"
-        }
-    )
+    express.static(path.join(__dirname, "public"), {
+        extensions: ["html"],
+        maxAge: "1h"
+    })
 );
 
 app.get("/healthz", (req, res) => {
     res.status(200).json({
         status: "ok",
         service: "minecraft-status-panel",
-        version: "2.0.0"
+        version: "2.0.1"
     });
 });
 
@@ -43,31 +39,20 @@ app.get("/api/status", async (req, res) => {
         });
     }
 
-    if (
-        !Number.isInteger(port) ||
-        port < 1 ||
-        port > 65535
-    ) {
+    if (!Number.isInteger(port) || port < 1 || port > 65535) {
         return res.status(400).json({
             online: false,
             error: "پورت باید بین 1 تا 65535 باشد."
         });
     }
 
-    const start = Date.now();
+    const startTime = Date.now();
 
     try {
-        const result = await pingWithTimeout(
-            host,
-            port,
-            8000
-        );
+        const result = await pingWithTimeout(host, port, 8000);
+        const ping = Date.now() - startTime;
 
-        const ping = Date.now() - start;
-
-        const data = normalizeMinecraftResponse(
-            result
-        );
+        const data = normalizeMinecraftResponse(result);
 
         res.set("Cache-Control", "no-store");
 
@@ -85,7 +70,7 @@ app.get("/api/status", async (req, res) => {
         });
 
     } catch (error) {
-        const ping = Date.now() - start;
+        const ping = Date.now() - startTime;
 
         console.error(
             `[Minecraft] ${host}:${port}`,
@@ -110,11 +95,7 @@ app.get("/api/status", async (req, res) => {
     }
 });
 
-async function pingWithTimeout(
-    host,
-    port,
-    timeout
-) {
+async function pingWithTimeout(host, port, timeout) {
     return Promise.race([
         pingJava(host, {
             port
@@ -122,11 +103,7 @@ async function pingWithTimeout(
 
         new Promise((_, reject) => {
             setTimeout(() => {
-                reject(
-                    new Error(
-                        "Minecraft server ping timeout"
-                    )
-                );
+                reject(new Error("Minecraft server ping timeout"));
             }, timeout);
         })
     ]);
@@ -136,17 +113,10 @@ function normalizeMinecraftResponse(data) {
     const players = data?.players || {};
     const version = data?.version || {};
 
-    const playersOnline = Number(
-        players.online ?? 0
-    );
+    const playersOnline = Number(players.online ?? 0);
+    const playersMax = Number(players.max ?? 0);
 
-    const playersMax = Number(
-        players.max ?? 0
-    );
-
-    const versionName =
-        version.name ??
-        "نامشخص";
+    const versionName = version.name ?? "نامشخص";
 
     const motd = cleanText(
         extractText(
@@ -170,15 +140,10 @@ function extractText(value) {
     }
 
     if (Array.isArray(value)) {
-        return value
-            .map(extractText)
-            .join("");
+        return value.map(extractText).join("");
     }
 
-    if (
-        value &&
-        typeof value === "object"
-    ) {
+    if (value && typeof value === "object") {
         let text = "";
 
         if (typeof value.text === "string") {
@@ -206,22 +171,8 @@ function cleanText(text) {
         .trim();
 }
 
-app.get("*", (req, res) => {
-    res.sendFile(
-        path.join(
-            __dirname,
-            "public",
-            "index.html"
-        )
+app.listen(PORT, "0.0.0.0", () => {
+    console.log(
+        `Minecraft Status Panel V2 running on port ${PORT}`
     );
 });
-
-app.listen(
-    PORT,
-    "0.0.0.0",
-    () => {
-        console.log(
-            `Minecraft Status Panel V2 running on port ${PORT}`
-        );
-    }
-);
