@@ -1,17 +1,35 @@
-const express = require("express");
-const path = require("path");
-const mcServerPing = require("mc-server-ping");
+import express from "express";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { pingJava } from "@minescope/mineping";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT) || 3000;
+
+app.disable("x-powered-by");
 
 app.use(express.json());
 
-app.use(express.static(path.join(__dirname, "public")));
+app.use(
+    express.static(
+        path.join(__dirname, "public"),
+        {
+            extensions: ["html"],
+            maxAge: "1h"
+        }
+    )
+);
 
 app.get("/healthz", (req, res) => {
-    res.status(200).send("OK");
+    res.status(200).json({
+        status: "ok",
+        service: "minecraft-status-panel",
+        version: "2.0.0"
+    });
 });
 
 app.get("/api/status", async (req, res) => {
@@ -25,26 +43,39 @@ app.get("/api/status", async (req, res) => {
         });
     }
 
-    if (!Number.isInteger(port) || port < 1 || port > 65535) {
+    if (
+        !Number.isInteger(port) ||
+        port < 1 ||
+        port > 65535
+    ) {
         return res.status(400).json({
             online: false,
             error: "پورت باید بین 1 تا 65535 باشد."
         });
     }
 
-    const startTime = Date.now();
+    const start = Date.now();
 
     try {
-        const result = await pingMinecraft(host, port);
+        const result = await pingWithTimeout(
+            host,
+            port,
+            8000
+        );
 
-        const ping = Date.now() - startTime;
-        const data = normalizeResult(result);
+        const ping = Date.now() - start;
+
+        const data = normalizeMinecraftResponse(
+            result
+        );
+
+        res.set("Cache-Control", "no-store");
 
         return res.json({
             online: true,
             host,
             port,
-            ping: data.ping || ping,
+            ping,
             players: {
                 online: data.playersOnline,
                 max: data.playersMax
@@ -54,16 +85,20 @@ app.get("/api/status", async (req, res) => {
         });
 
     } catch (error) {
+        const ping = Date.now() - start;
+
         console.error(
-            `Minecraft ping failed: ${host}:${port}`,
-            error.message
+            `[Minecraft] ${host}:${port}`,
+            error?.message || error
         );
+
+        res.set("Cache-Control", "no-store");
 
         return res.json({
             online: false,
             host,
             port,
-            ping: Date.now() - startTime,
+            ping,
             players: {
                 online: 0,
                 max: 0
@@ -75,101 +110,57 @@ app.get("/api/status", async (req, res) => {
     }
 });
 
-function pingMinecraft(host, port) {
-    return new Promise((resolve, reject) => {
-        let finished = false;
+async function pingWithTimeout(
+    host,
+    port,
+    timeout
+) {
+    return Promise.race([
+        pingJava(host, {
+            port
+        }),
 
-        const done = (error, result) => {
-            if (finished) return;
-
-            finished = true;
-
-            if (error) {
-                reject(error);
-            } else {
-                resolve(result);
-            }
-        };
-
-        try {
-            const result = mcServerPing(host, port, done);
-
-            if (result && typeof result.then === "function") {
-                result
-                    .then((data) => {
-                        if (finished) return;
-
-                        finished = true;
-                        resolve(data);
-                    })
-                    .catch((error) => {
-                        if (finished) return;
-
-                        finished = true;
-                        reject(error);
-                    });
-            } else if (
-                result !== undefined &&
-                typeof result !== "function"
-            ) {
-                if (finished) return;
-
-                finished = true;
-                resolve(result);
-            }
-
-        } catch (error) {
-            if (!finished) {
-                finished = true;
-                reject(error);
-            }
-        }
-    });
+        new Promise((_, reject) => {
+            setTimeout(() => {
+                reject(
+                    new Error(
+                        "Minecraft server ping timeout"
+                    )
+                );
+            }, timeout);
+        })
+    ]);
 }
 
-function normalizeResult(result) {
-    const data = result || {};
-    const players = data.players || {};
+function normalizeMinecraftResponse(data) {
+    const players = data?.players || {};
+    const version = data?.version || {};
 
-    let motd =
-        data.description ??
-        data.motd ??
-        data.message ??
-        "بدون MOTD";
+    const playersOnline = Number(
+        players.online ?? 0
+    );
 
-    if (typeof motd === "object") {
-        motd = extractText(motd);
-    }
+    const playersMax = Number(
+        players.max ?? 0
+    );
 
-    const version =
-        data.version?.name ??
-        data.version ??
+    const versionName =
+        version.name ??
         "نامشخص";
 
-    return {
-        playersOnline: Number(
-            players.online ??
-            data.playerCount ??
-            data.online ??
-            0
-        ),
-
-        playersMax: Number(
-            players.max ??
-            data.maxPlayers ??
-            data.max ??
-            0
-        ),
-
-        version: String(version),
-
-        motd: cleanText(String(motd)),
-
-        ping: Number(
-            data.latency ??
-            data.ping ??
-            0
+    const motd = cleanText(
+        extractText(
+            data?.description ??
+            data?.motd ??
+            "بدون MOTD"
         )
+    );
+
+    return {
+        playersOnline,
+        playersMax,
+        version: String(versionName),
+        motd
     };
 }
 
@@ -179,13 +170,18 @@ function extractText(value) {
     }
 
     if (Array.isArray(value)) {
-        return value.map(extractText).join("");
+        return value
+            .map(extractText)
+            .join("");
     }
 
-    if (value && typeof value === "object") {
+    if (
+        value &&
+        typeof value === "object"
+    ) {
         let text = "";
 
-        if (value.text) {
+        if (typeof value.text === "string") {
             text += value.text;
         }
 
@@ -204,7 +200,7 @@ function extractText(value) {
 }
 
 function cleanText(text) {
-    return text
+    return String(text)
         .replace(/§[0-9a-fk-or]/gi, "")
         .replace(/\s+/g, " ")
         .trim();
@@ -212,12 +208,20 @@ function cleanText(text) {
 
 app.get("*", (req, res) => {
     res.sendFile(
-        path.join(__dirname, "public", "index.html")
+        path.join(
+            __dirname,
+            "public",
+            "index.html"
+        )
     );
 });
 
-app.listen(PORT, "0.0.0.0", () => {
-    console.log(
-        `Minecraft Status Panel running on port ${PORT}`
-    );
-});
+app.listen(
+    PORT,
+    "0.0.0.0",
+    () => {
+        console.log(
+            `Minecraft Status Panel V2 running on port ${PORT}`
+        );
+    }
+);
