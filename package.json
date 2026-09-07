@@ -1,7 +1,8 @@
 {
   "name": "minecraft-status-panel",
-  "version": "1.0.0",
-  "description": "Minecraft Java Server Status Panel",
+  "version": "2.0.0",
+  "description": "Minecraft Java Server Status Panel V2",
+  "type": "module",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
@@ -10,7 +11,7 @@
     "node": ">=18"
   },
   "dependencies": {
-    "express": "^5.1.0",
-    "mc-server-ping": "1.0.0"
+    "@minescope/mineping": "2.0.1",
+    "express": "^5.1.0"
   }
 }
