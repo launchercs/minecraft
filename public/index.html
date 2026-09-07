@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Minecraft Server Status</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <main class="container">
+
+        <section class="hero">
+            <div class="minecraft-icon">⛏️</div>
+
+            <h1>وضعیت سرور ماینکرفت</h1>
+
+            <p>
+                وضعیت سرور Minecraft Java خود را بررسی کنید
+            </p>
+        </section>
+
+        <section class="panel">
+
+            <div class="form">
+
+                <label for="host">
+                    IP یا دامنه سرور
+                </label>
+
+                <input
+                    id="host"
+                    type="text"
+                    placeholder="مثلاً play.example.com"
+                    autocomplete="off"
+                >
+
+                <label for="port">
+                    پورت
+                </label>
+
+                <input
+                    id="port"
+                    type="number"
+                    value="25565"
+                    min="1"
+                    max="65535"
+                    placeholder="25565"
+                >
+
+                <button id="checkButton">
+                    <span>بررسی سرور</span>
+                </button>
+
+            </div>
+
+            <div id="message" class="message hidden"></div>
+
+            <section id="result" class="result hidden">
+
+                <div class="status-header">
+
+                    <div id="statusDot" class="status-dot"></div>
+
+                    <div>
+                        <h2 id="statusText">آنلاین</h2>
+                        <p id="serverAddress">---</p>
+                    </div>
+
+                </div>
+
+                <div class="cards">
+
+                    <div class="card">
+                        <span class="card-icon">👥</span>
+
+                        <div>
+                            <small>بازیکنان</small>
+                            <strong id="players">0 / 0</strong>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <span class="card-icon">📡</span>
+
+                        <div>
+                            <small>پینگ</small>
+                            <strong id="ping">0 ms</strong>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <span class="card-icon">🧱</span>
+
+                        <div>
+                            <small>نسخه</small>
+                            <strong id="version">---</strong>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="motd-box">
+
+                    <span>MOTD</span>
+
+                    <p id="motd">
+                        ---
+                    </p>
+
+                </div>
+
+                <div class="last-update">
+                    آخرین بررسی:
+                    <span id="lastUpdate">---</span>
+                </div>
+
+            </section>
+
+        </section>
+
+        <footer>
+            Minecraft Status Panel
+        </footer>
+
+    </main>
+
+    <script src="script.js"></script>
+
+</body>
+</html>�دن موفقیت‌آمیز -->
+    <div id="toast" class="toast">رمز عبور با موفقیت کپی شد!</div>
+
+    <script src="js/script.js"></script>    
+</body>
+</html>

@@ -1,0 +1,437 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, Tahoma, sans-serif;
+    min-height: 100vh;
+    background:
+        radial-gradient(circle at top, #263238, #101417 60%);
+    color: #ffffff;
+}
+
+.container {
+    width: min(900px, 94%);
+    margin: auto;
+    padding: 40px 0;
+}
+
+.hero {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.minecraft-icon {
+    width: 75px;
+    height: 75px;
+    margin: 0 auto 18px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 38px;
+
+    background: #20282c;
+    border: 1px solid #39454b;
+    border-radius: 18px;
+
+    box-shadow: 0 10px 40px rgba(0, 0, 0, .35);
+}
+
+.hero h1 {
+    font-size: clamp(26px, 5vw, 42px);
+    margin-bottom: 10px;
+}
+
+.hero p {
+    color: #aeb8bd;
+}
+
+.panel {
+    background: rgba(25, 32, 36, .95);
+    border: 1px solid #344047;
+    border-radius: 22px;
+    padding: 25px;
+
+    box-shadow:
+        0 20px 60px rgba(0, 0, 0, .35);
+}
+
+.form {
+    display: grid;
+    gap: 10px;
+}
+
+label {
+    color: #cfd8dc;
+    font-size: 14px;
+    margin-top: 8px;
+}
+
+input {
+    width: 100%;
+    padding: 15px;
+
+    background: #101619;
+    color: white;
+
+    border: 1px solid #3a474e;
+    border-radius: 12px;
+
+    outline: none;
+    font-size: 16px;
+    direction: ltr;
+    text-align: left;
+
+    transition: .2s;
+}
+
+input:focus {
+    border-color: #64b5f6;
+    box-shadow: 0 0 0 3px rgba(100, 181, 246, .1);
+}
+
+button {
+    margin-top: 10px;
+
+    padding: 15px;
+
+    border: none;
+    border-radius: 12px;
+
+    background: #43a047;
+    color: white;
+
+    font-size: 16px;
+    font-weight: bold;
+
+    cursor: pointer;
+
+    transition: .2s;
+}
+
+button:hover {
+    background: #4caf50;
+    transform: translateY(-1px);
+}
+
+button:disabled {
+    opacity: .6;
+    cursor: wait;
+    transform: none;
+}
+
+.message {
+    margin-top: 20px;
+    padding: 14px;
+
+    border-radius: 12px;
+    background: #2b353a;
+
+    color: #dce5e8;
+    text-align: center;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.result {
+    margin-top: 25px;
+}
+
+.status-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+
+    padding: 20px;
+
+    background: #11181b;
+    border-radius: 16px;
+}
+
+.status-header h2 {
+    margin-bottom: 5px;
+}
+
+.status-header p {
+    color: #9eaaaf;
+    direction: ltr;
+    text-align: right;
+}
+
+.status-dot {
+    width: 18px;
+    height: 18px;
+
+    border-radius: 50%;
+    background: #4caf50;
+
+    box-shadow: 0 0 15px #4caf50;
+}
+
+.status-dot.offline {
+    background: #f44336;
+    box-shadow: 0 0 15px #f44336;
+}
+
+.cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+
+    margin-top: 15px;
+}
+
+.card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    padding: 18px;
+
+    background: #11181b;
+    border-radius: 15px;
+
+    min-width: 0;
+}
+
+.card-icon {
+    font-size: 25px;
+}
+
+.card small {
+    display: block;
+    color: #89969c;
+    margin-bottom: 6px;
+}
+
+.card strong {
+    display: block;
+    word-break: break-word;
+    direction: ltr;
+    text-align: right;
+}
+
+.motd-box {
+    margin-top: 15px;
+    padding: 20px;
+
+    background: #11181b;
+    border-radius: 15px;
+}
+
+.motd-box span {
+    color: #89969c;
+    font-size: 13px;
+}
+
+.motd-box p {
+    margin-top: 10px;
+    line-height: 1.8;
+    word-break: break-word;
+}
+
+.last-update {
+    text-align: center;
+    color: #7e8a8f;
+
+    margin-top: 20px;
+    font-size: 13px;
+}
+
+footer {
+    text-align: center;
+    color: #657176;
+    margin-top: 25px;
+}
+
+@media (max-width: 650px) {
+
+    .container {
+        padding: 25px 0;
+    }
+
+    .panel {
+        padding: 18px;
+    }
+
+    .cards {
+        grid-template-columns: 1fr;
+    }
+
+    .hero h1 {
+        font-size: 27px;
+    }
+}rance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    background: var(--border-color);
+    border-radius: 3px;
+    outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+    background: var(--accent-hover);
+    transform: scale(1.2);
+}
+
+/* گرید چک‌باکس‌ها */
+.checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    font-size: 0.85rem;
+    color: var(--text-main);
+    cursor: pointer;
+    position: relative;
+    user-select: none;
+}
+
+.checkbox-label input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+/* شخصی‌سازی چشمی چک‌باکس */
+.custom-checkbox {
+    height: 18px;
+    width: 18px;
+    background-color: var(--border-color);
+    border-radius: 4px;
+    margin-left: 10px;
+    display: inline-block;
+    position: relative;
+    transition: var(--transition);
+}
+
+.checkbox-label:hover input ~ .custom-checkbox {
+    background-color: #475569;
+}
+
+.checkbox-label input:checked ~ .custom-checkbox {
+    background-color: var(--accent);
+}
+
+.custom-checkbox::after {
+    content: "";
+    position: absolute;
+    display: none;
+    left: 6px;
+    top: 2px;
+    width: 4px;
+    height: 9px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.checkbox-label input:checked ~ .custom-checkbox::after {
+    display: block;
+}
+
+/* پیام خطا */
+.error-message {
+    color: var(--danger);
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    text-align: center;
+    margin-bottom: 20px;
+    display: none;
+    animation: shake 0.4s ease;
+}
+
+/* دکمه اصلی تولید رمز */
+.generate-btn {
+    width: 100%;
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 14px;
+    border-radius: var(--radius);
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.generate-btn:hover {
+    background: var(--accent-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+}
+
+.generate-btn:active {
+    transform: translateY(0);
+}
+
+/* توست (Toast Notification) */
+.toast {
+    position: fixed;
+    bottom: -60px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--success);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 30px;
+    font-size: 0.9rem;
+    box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+    transition: bottom 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 1000;
+}
+
+.toast.show {
+    bottom: 30px;
+}
+
+/* انیمیشن‌ها */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+}
+
+/* واکنش‌گرایی برای موبایل‌های کوچک */
+@media (max-width: 480px) {
+    .container {
+        padding: 25px 20px;
+    }
+    .checkbox-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+}
