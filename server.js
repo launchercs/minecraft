@@ -1,46 +1,31 @@
 const express = require("express");
-const mcServerPing = require("mc-server-ping");
 const path = require("path");
+const mcServerPing = require("mc-server-ping");
 
 const app = express();
 
-// Render خودش PORT را تعیین می‌کند
 const PORT = process.env.PORT || 3000;
 
-// JSON API
 app.use(express.json());
 
-// فایل‌های استاتیک داخل public
 app.use(express.static(path.join(__dirname, "public")));
 
-// ================================
-// Health Check - مخصوص Render
-// ================================
 app.get("/healthz", (req, res) => {
     res.status(200).send("OK");
 });
 
-// ================================
-// Minecraft Server Status API
-// ================================
 app.get("/api/status", async (req, res) => {
     const host = String(req.query.host || "").trim();
     const port = Number(req.query.port || 25565);
 
-    // بررسی IP / دامنه
     if (!host) {
         return res.status(400).json({
             online: false,
-            error: "آی‌پی یا دامنه سرور وارد نشده است."
+            error: "IP یا دامنه سرور وارد نشده است."
         });
     }
 
-    // بررسی Port
-    if (
-        !Number.isInteger(port) ||
-        port < 1 ||
-        port > 65535
-    ) {
+    if (!Number.isInteger(port) || port < 1 || port > 65535) {
         return res.status(400).json({
             online: false,
             error: "پورت باید بین 1 تا 65535 باشد."
@@ -50,98 +35,189 @@ app.get("/api/status", async (req, res) => {
     const startTime = Date.now();
 
     try {
-        // Ping سرور Minecraft Java
-        const result = await mcServerPing(host, port);
+        const result = await pingMinecraft(host, port);
 
         const ping = Date.now() - startTime;
+        const data = normalizeResult(result);
 
-        res.json({
+        return res.json({
             online: true,
-
-            host: host,
-            port: port,
-
-            ping: ping,
-
+            host,
+            port,
+            ping: data.ping || ping,
             players: {
-                online: result.players?.online ?? 0,
-                max: result.players?.max ?? 0
+                online: data.playersOnline,
+                max: data.playersMax
             },
-
-            version:
-                result.version?.name ||
-                result.version?.protocol ||
-                "نامشخص",
-
-            motd:
-                result.description ||
-                result.motd ||
-                "بدون MOTD"
+            version: data.version,
+            motd: data.motd
         });
 
     } catch (error) {
-
         console.error(
-            `Minecraft server check failed for ${host}:${port}`,
+            `Minecraft ping failed: ${host}:${port}`,
             error.message
         );
 
-        res.json({
+        return res.json({
             online: false,
-
-            host: host,
-            port: port,
-
+            host,
+            port,
             ping: Date.now() - startTime,
-
             players: {
                 online: 0,
                 max: 0
             },
-
             version: "نامشخص",
-
             motd: "سرور آفلاین یا در دسترس نیست.",
-
             error: "اتصال به سرور Minecraft برقرار نشد."
         });
     }
 });
 
-// ================================
-// Frontend
-// ================================
+function pingMinecraft(host, port) {
+    return new Promise((resolve, reject) => {
+        let finished = false;
+
+        const done = (error, result) => {
+            if (finished) return;
+
+            finished = true;
+
+            if (error) {
+                reject(error);
+            } else {
+                resolve(result);
+            }
+        };
+
+        try {
+            const result = mcServerPing(host, port, done);
+
+            if (result && typeof result.then === "function") {
+                result
+                    .then((data) => {
+                        if (finished) return;
+
+                        finished = true;
+                        resolve(data);
+                    })
+                    .catch((error) => {
+                        if (finished) return;
+
+                        finished = true;
+                        reject(error);
+                    });
+            } else if (
+                result !== undefined &&
+                typeof result !== "function"
+            ) {
+                if (finished) return;
+
+                finished = true;
+                resolve(result);
+            }
+
+        } catch (error) {
+            if (!finished) {
+                finished = true;
+                reject(error);
+            }
+        }
+    });
+}
+
+function normalizeResult(result) {
+    const data = result || {};
+    const players = data.players || {};
+
+    let motd =
+        data.description ??
+        data.motd ??
+        data.message ??
+        "بدون MOTD";
+
+    if (typeof motd === "object") {
+        motd = extractText(motd);
+    }
+
+    const version =
+        data.version?.name ??
+        data.version ??
+        "نامشخص";
+
+    return {
+        playersOnline: Number(
+            players.online ??
+            data.playerCount ??
+            data.online ??
+            0
+        ),
+
+        playersMax: Number(
+            players.max ??
+            data.maxPlayers ??
+            data.max ??
+            0
+        ),
+
+        version: String(version),
+
+        motd: cleanText(String(motd)),
+
+        ping: Number(
+            data.latency ??
+            data.ping ??
+            0
+        )
+    };
+}
+
+function extractText(value) {
+    if (typeof value === "string") {
+        return value;
+    }
+
+    if (Array.isArray(value)) {
+        return value.map(extractText).join("");
+    }
+
+    if (value && typeof value === "object") {
+        let text = "";
+
+        if (value.text) {
+            text += value.text;
+        }
+
+        if (value.extra) {
+            text += extractText(value.extra);
+        }
+
+        if (value.content) {
+            text += extractText(value.content);
+        }
+
+        return text;
+    }
+
+    return "";
+}
+
+function cleanText(text) {
+    return text
+        .replace(/§[0-9a-fk-or]/gi, "")
+        .replace(/\s+/g, " ")
+        .trim();
+}
+
 app.get("*", (req, res) => {
     res.sendFile(
         path.join(__dirname, "public", "index.html")
     );
 });
 
-// ================================
-// Start Server
-// ================================
 app.listen(PORT, "0.0.0.0", () => {
     console.log(
         `Minecraft Status Panel running on port ${PORT}`
     );
 });
-
-حالا در GitHub باید فایل دقیقاً اینجا باشد:
-
-📁 minecraft-status/
-├── 📄 server.js          ← این کد
-├── 📄 package.json
-├── 📄 .gitignore
-└── 📁 public/
-    ├── 📄 index.html
-    ├── 📄 style.css
-    └── 📄 script.js
-
-در Render هم:
-
-❤️ Health Check Path
-/healthz
-
-و بقیه Advanced را همان‌طور که گفتیم بگذار.
-
-بعد از اینکه "server.js" را در GitHub ذخیره کردی، Render با "Auto-Deploy → On Commit" باید خودش Deploy جدید را شروع کند.
